@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Field Notes — Three Months of Building AI Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F0E8;
+    --bg-soft: #EFE9DD;
+    --bg-deep: #E8E0CF;
+    --ink: #1F1B16;
+    --ink-soft: #5C544A;
+    --ink-faint: #8A8275;
+    --hair: #D6CFC0;
+    --hair-strong: #B8AE99;
+    --accent: #8B2A1F;
+    --accent-soft: #C7553F;
+    --accent-bg: rgba(139, 42, 31, 0.06);
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Newsreader', Georgia, serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* ======= TOP BAR ======= */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(244, 240, 232, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--hair);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    transition: opacity 0.4s ease;
+  }
+  .topbar-inner {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .topbar-title:hover { color: var(--accent); }
+  .topbar-chapter {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+  .topbar-chapter span.num {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .toc-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s;
+  }
+  .toc-trigger:hover { color: var(--accent); }
+  .toc-trigger-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 14px;
+  }
+  .toc-trigger-lines span {
+    height: 1px;
+    background: currentColor;
+    transition: all 0.3s;
+  }
+  .toc-trigger-lines span:nth-child(1) { width: 100%; }
+  .toc-trigger-lines span:nth-child(2) { width: 70%; }
+  .toc-trigger-lines span:nth-child(3) { width: 100%; }
+
+  /* ======= PROGRESS BAR ======= */
+  .progress {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    height: 1px;
+    background: var(--accent);
+    width: 0%;
+    z-index: 49;
+    transition: width 0.15s ease;
+  }
+
+  /* ======= COVER ======= */
+  .cover {
+    min-height: 100vh;
+    padding: 140px 32px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .cover-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 48px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .cover-meta-bar {
+    flex: 1;
+    height: 1px;
+    background: var(--hair-strong);
+    max-width: 80px;
+  }
+  .cover-title {
+    font-family: var(--display);
+    font-weight: 350;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+    font-size: clamp(44px, 7vw, 88px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 32px;
+  }
+  .cover-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 350;
+  }
+  .cover-subtitle {
+    font-family: var(--body);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(20px, 2.4vw, 28px);
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 720px;
+    margin-bottom: 56px;
+  }
+  .cover-byline {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    margin-bottom: 64px;
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+  .cover-byline-item .label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .cover-byline-item .value {
+    font-family: var(--body);
+    font-size: 16px;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+  .cover-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 32px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 0;
+    transition: all 0.3s;
+    align-self: flex-start;
+  }
+  .cover-cta:hover {
+    background: var(--accent);
+    transform: translateY(-2px);
+  }
+  .cover-cta-arrow {
+    transition: transform 0.3s;
+  }
+  .cover-cta:hover .cover-cta-arrow {
+    transform: translateX(4px);
+  }
+  .cover-resume-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin-top: 16px;
+    align-self: flex-start;
+  }
+  .cover-resume-note a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .cover-toc {
+    margin-top: 96px;
+    padding-top: 48px;
+    border-top: 0.5px solid var(--hair);
+  }
+  .cover-toc-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 32px;
+  }
+  .cover-toc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .cover-toc-item {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    padding: 20px 0;
+    border-bottom: 0.5px solid var(--hair);
+    cursor: pointer;
+    transition: padding 0.3s, color 0.3s;
+  }
+  .cover-toc-item:hover {
+    padding-left: 12px;
+    color: var(--accent);
+  }
+  .cover-toc-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+  .cover-toc-title {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 400;
+    font-variation-settings: 'opsz' 36;
+    letter-spacing: -0.01em;
+  }
+  .cover-toc-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+
+  /* ======= CHAPTER ======= */
+  .chapter {
+    display: none;
+    min-height: 100vh;
+    padding: 120px 32px 120px;
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .chapter.active {
+    display: block;
+    animation: fadeIn 0.6s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chapter-header {
+    margin-bottom: 64px;
+    padding-bottom: 40px;
+    border-bottom: 0.5px solid var(--hair);
+  }
+  .chapter-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .chapter-meta-num {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .chapter-meta-line {
+    flex: 1;
+    height: 1px;
+    background: var(--hair-strong);
+    max-width: 60px;
+  }
+  .chapter-meta-time {
+    color: var(--ink-faint);
+  }
+  .chapter-title {
+    font-family: var(--display);
+    font-weight: 350;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+    font-size: clamp(40px, 5.5vw, 64px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+  }
+  .chapter-subtitle {
+    font-family: var(--body);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+
+  /* ======= CHAPTER BODY ======= */
+  .chapter-body p {
+    font-family: var(--body);
+    font-size: 19px;
+    line-height: 1.65;
+    margin-bottom: 26px;
+    color: var(--ink);
+  }
+  .chapter-body p.lead {
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 32px;
+  }
+  .chapter-body p.lead::first-letter {
+    font-family: var(--display);
+    font-size: 5em;
+    float: left;
+    line-height: 0.85;
+    margin: 0.05em 0.12em 0 -0.04em;
+    color: var(--accent);
+    font-weight: 400;
+    font-variation-settings: 'opsz' 144;
+  }
+  .chapter-body h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 26px;
+    line-height: 1.2;
+    margin-top: 56px;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .chapter-body h3.subagent {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+    font-size: 24px;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 0.5px solid var(--hair);
+  }
+  .chapter-body strong {
+    font-weight: 500;
+  }
+  .chapter-body em {
+    font-style: italic;
+  }
+  .chapter-body .label {
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .chapter-body blockquote {
+    margin: 36px 0;
+    padding: 20px 24px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-bg);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .chapter-body blockquote em {
+    font-style: italic;
+  }
+  .chapter-body .pullquote {
+    margin: 56px -24px;
+    padding: 32px 24px;
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 350;
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--accent);
+    border-top: 1px solid var(--hair-strong);
+    border-bottom: 1px solid var(--hair-strong);
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+  .chapter-body ul, .chapter-body ol {
+    margin: 24px 0 32px 0;
+    padding-left: 28px;
+  }
+  .chapter-body li {
+    margin-bottom: 14px;
+    font-size: 19px;
+    line-height: 1.6;
+  }
+
+  /* ======= CHAPTER NAV ======= */
+  .chapter-nav {
+    margin-top: 96px;
+    padding-top: 40px;
+    border-top: 0.5px solid var(--hair);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .chapter-nav-link {
+    padding: 24px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    border: 0.5px solid var(--hair);
+    border-radius: 2px;
+  }
+  .chapter-nav-link:hover {
+    background: var(--bg-deep);
+    border-color: var(--hair-strong);
+  }
+  .chapter-nav-link.next {
+    text-align: right;
+  }
+  .chapter-nav-link.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .chapter-nav-direction {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .chapter-nav-title {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .chapter-nav-link:hover .chapter-nav-title {
+    color: var(--accent);
+  }
+
+  /* ======= TOC DRAWER ======= */
+  .toc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 27, 22, 0);
+    z-index: 100;
+    pointer-events: none;
+    transition: background 0.4s ease;
+  }
+  .toc-overlay.open {
+    background: rgba(31, 27, 22, 0.4);
+    pointer-events: auto;
+  }
+  .toc-drawer {
+    position: fixed;
+    top: 0;
+    right: -480px;
+    width: 100%;
+    max-width: 480px;
+    height: 100vh;
+    background: var(--bg);
+    z-index: 101;
+    transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    border-left: 0.5px solid var(--hair);
+  }
+  .toc-drawer.open { right: 0; }
+  .toc-drawer-inner {
+    padding: 56px 40px 40px;
+  }
+  .toc-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .toc-drawer-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .toc-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    padding: 4px 8px;
+  }
+  .toc-close:hover { color: var(--accent); }
+  .toc-drawer-list {
+    list-style: none;
+  }
+  .toc-drawer-item {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 16px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-bottom: 0.5px solid var(--hair);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .toc-drawer-item:hover {
+    padding-left: 8px;
+  }
+  .toc-drawer-item.active .toc-drawer-title {
+    color: var(--accent);
+  }
+  .toc-drawer-item.active .toc-drawer-num::before {
+    content: '→ ';
+    color: var(--accent);
+  }
+  .toc-drawer-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+  .toc-drawer-title {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    transition: color 0.3s;
+  }
+  .toc-drawer-subtitle {
+    font-family: var(--body);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ======= COVER DECORATIVE ELEMENT ======= */
+  .cover-mark {
+    position: absolute;
+    top: 80px;
+    right: 32px;
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 24px;
+  }
+
+  /* ======= MOBILE ======= */
+  @media (max-width: 640px) {
+    .topbar { padding: 0 16px; height: 52px; }
+    .progress { top: 52px; }
+    .cover { padding: 120px 20px 60px; }
+    .cover-meta { margin-bottom: 36px; flex-wrap: wrap; }
+    .cover-byline { gap: 24px; margin-bottom: 48px; }
+    .chapter { padding: 100px 20px 80px; }
+    .chapter-body p, .chapter-body li { font-size: 17px; }
+    .chapter-body p.lead { font-size: 19px; }
+    .chapter-body p.lead::first-letter { font-size: 4em; }
+    .chapter-body .pullquote { font-size: 22px; margin: 40px 0; padding: 24px 0; }
+    .chapter-nav { grid-template-columns: 1fr; }
+    .chapter-nav-link.next { text-align: left; }
+    .toc-drawer { max-width: 100%; }
+    .cover-toc-item { grid-template-columns: 40px 1fr auto; gap: 12px; }
+    .cover-toc-title { font-size: 18px; }
+    .cover-mark { display: none; }
+  }
+
+  /* ======= DOWNLOAD BUTTONS ======= */
+  .cover-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    margin-top: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    align-self: flex-start;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .cover-secondary:hover {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+  .cover-secondary svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .toc-download {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 0;
+    margin-bottom: 24px;
+    border-bottom: 0.5px solid var(--hair);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
+    text-align: left;
+    transition: color 0.2s, padding 0.3s;
+  }
+  .toc-download:hover {
+    color: var(--accent);
+    padding-left: 8px;
+  }
+  .toc-download svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: none;
+  }
+  .toc-download-meta {
+    margin-left: auto;
+    color: var(--ink-faint);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ======= PRINT STYLES ======= */
+  @media print {
+    @page {
+      size: A4;
+      margin: 20mm 18mm 22mm 18mm;
+    }
+
+    html, body {
+      background: white !important;
+      color: #1F1B16 !important;
+      font-size: 10.5pt;
+      line-height: 1.5;
+    }
+
+    /* Hide all chrome and interactive UI */
+    .topbar,
+    .progress,
+    .toc-overlay,
+    .toc-drawer,
+    .cover-cta,
+    .cover-resume-note,
+    .cover-secondary,
+    .chapter-nav,
+    .toc-trigger,
+    .cover-mark {
+      display: none !important;
+    }
+
+    /* Cover: simplify, drop the long table of contents (chapters follow anyway) */
+    .cover {
+      display: block !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+      min-height: auto !important;
+      page-break-after: always;
+    }
+    .cover-meta {
+      margin-bottom: 32pt;
+      font-size: 9pt;
+      color: #5C544A;
+    }
+    .cover-meta-bar { background: #B8AE99; }
+    .cover-title {
+      font-size: 36pt !important;
+      line-height: 1.05;
+      margin-bottom: 18pt;
+      color: #1F1B16 !important;
+    }
+    .cover-title em { color: #8B2A1F !important; }
+    .cover-subtitle {
+      font-size: 14pt !important;
+      line-height: 1.4;
+      margin-bottom: 32pt;
+      color: #5C544A !important;
+    }
+    .cover-byline {
+      gap: 32pt;
+      margin-bottom: 0;
+    }
+    .cover-byline-item .label { font-size: 8pt; }
+    .cover-byline-item .value { font-size: 11pt; }
+    .cover-toc { display: none !important; }
+
+    /* Show ALL chapters in print, regardless of which is active on screen */
+    .chapter {
+      display: block !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      page-break-before: always;
+      animation: none !important;
+    }
+
+    /* Chapter typography for print */
+    .chapter-header {
+      margin-bottom: 28pt;
+      padding-bottom: 18pt;
+      border-bottom: 0.5pt solid #D6CFC0;
+    }
+    .chapter-meta {
+      font-size: 9pt;
+      margin-bottom: 24pt;
+      color: #5C544A;
+    }
+    .chapter-meta-num { color: #8B2A1F !important; }
+    .chapter-meta-line { background: #B8AE99; }
+    .chapter-title {
+      font-size: 28pt !important;
+      line-height: 1.05;
+      margin-bottom: 12pt;
+      color: #1F1B16 !important;
+    }
+    .chapter-subtitle {
+      font-size: 14pt !important;
+      line-height: 1.35;
+      color: #5C544A !important;
+    }
+
+    /* Body */
+    .chapter-body p {
+      font-size: 10.5pt !important;
+      line-height: 1.55;
+      margin-bottom: 12pt;
+      color: #1F1B16 !important;
+      orphans: 3;
+      widows: 3;
+    }
+    .chapter-body p.lead {
+      font-size: 12pt !important;
+      line-height: 1.45;
+      margin-bottom: 14pt;
+    }
+    .chapter-body p.lead::first-letter {
+      font-size: 3.5em;
+      color: #8B2A1F !important;
+    }
+    .chapter-body h3 {
+      font-size: 14pt !important;
+      margin-top: 24pt;
+      margin-bottom: 10pt;
+      page-break-after: avoid;
+      color: #1F1B16 !important;
+    }
+    .chapter-body h3.subagent {
+      color: #8B2A1F !important;
+      font-size: 13pt !important;
+      margin-top: 28pt;
+      padding-top: 16pt;
+      border-top: 0.5pt solid #D6CFC0;
+    }
+    .chapter-body blockquote {
+      margin: 16pt 0;
+      padding: 10pt 14pt;
+      border-left: 1.5pt solid #8B2A1F;
+      background: #F8F0EE !important;
+      font-size: 9.5pt !important;
+      color: #5C544A !important;
+      page-break-inside: avoid;
+    }
+    .chapter-body .pullquote {
+      margin: 24pt 0;
+      padding: 18pt 16pt;
+      font-size: 16pt !important;
+      line-height: 1.3;
+      color: #8B2A1F !important;
+      border-top: 0.5pt solid #B8AE99;
+      border-bottom: 0.5pt solid #B8AE99;
+      page-break-inside: avoid;
+    }
+    .chapter-body ul, .chapter-body ol {
+      margin: 12pt 0 16pt 0;
+    }
+    .chapter-body li {
+      font-size: 10.5pt !important;
+      line-height: 1.5;
+      margin-bottom: 6pt;
+    }
+    .chapter-body strong, .chapter-body .label {
+      color: #1F1B16 !important;
+    }
+
+    /* Layout safety */
+    p, blockquote, .pullquote, .chapter-meta { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+
+    /* Force colors to print (Chrome/Safari/Edge) */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-title" onclick="goCover()">Field Notes / Chris Gayner</div>
+    <div class="topbar-chapter" id="topbarChapter"></div>
+    <button class="toc-trigger" onclick="openTOC()">
+      <span class="toc-trigger-lines"><span></span><span></span><span></span></span>
+      Contents
+    </button>
+  </div>
+</div>
+
+<div class="progress" id="progress"></div>
+
+<!-- ============ COVER PAGE ============ -->
+<section class="cover" id="cover">
+  <div class="cover-mark">§</div>
+
+  <div class="cover-meta">
+    <span>An essay in 13 chapters</span>
+    <span class="cover-meta-bar"></span>
+    <span>~38 min read</span>
+  </div>
+
+  <h1 class="cover-title">
+    I spent three months building <em>AI agents</em> in a real GTM operation.
+  </h1>
+
+  <p class="cover-subtitle">
+    Field notes from a working CMO — the wins, the failures, and the things I wish someone had told me before I started.
+  </p>
+
+  <div class="cover-byline">
+    <div class="cover-byline-item">
+      <span class="label">By</span>
+      <span class="value">Chris Gayner</span>
+    </div>
+    <div class="cover-byline-item">
+      <span class="label">Format</span>
+      <span class="value">Practitioner essay</span>
+    </div>
+    <div class="cover-byline-item">
+      <span class="label">Length</span>
+      <span class="value">~6,400 words</span>
+    </div>
+  </div>
+
+  <button class="cover-cta" onclick="startReading()">
+    Begin reading
+    <span class="cover-cta-arrow">→</span>
+  </button>
+
+  <div class="cover-resume-note" id="resumeNote" style="display:none;"></div>
+
+  <button class="cover-secondary" onclick="downloadPDF()" title="Print or save the full essay as a PDF">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Download as PDF
+  </button>
+
+  <div class="cover-toc">
+    <div class="cover-toc-label">— Contents</div>
+    <ul class="cover-toc-list" id="coverTocList"></ul>
+  </div>
+</section>
+
+<!-- ============ CHAPTER CONTAINER ============ -->
+<main id="chapterContainer"></main>
+
+<!-- ============ TOC DRAWER ============ -->
+<div class="toc-overlay" id="tocOverlay" onclick="closeTOC()"></div>
+<aside class="toc-drawer" id="tocDrawer">
+  <div class="toc-drawer-inner">
+    <div class="toc-drawer-header">
+      <div class="toc-drawer-label">— Contents</div>
+      <button class="toc-close" onclick="closeTOC()">Close ✕</button>
+    </div>
+
+    <button class="toc-download" onclick="downloadPDF()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Download as PDF
+      <span class="toc-download-meta">All chapters</span>
+    </button>
+
+    <ul class="toc-drawer-list" id="tocDrawerList"></ul>
+  </div>
+</aside>
+
+<script>
+// ===================== CHAPTER DATA =====================
+const chapters = [
+  {
+    num: '00',
+    title: 'Opening',
+    subtitle: 'Why I wrote this — and who it is for.',
+    time: '3 min',
+    body: `
+      <p class="lead">I'm not an engineer. I don't have a computer science background. What I have is a GTM function to run, a team that doesn't have enough hours in the day, and a genuine belief that AI agents could help with both of those problems.</p>
+
+      <p>So over the past three months, I built some. Across a growing stack of tools — Claude, ChatGPT, Lovable, ClickUp, and a rotating cast of connectors and integrations — I designed, iterated, broke, fixed, and in some cases scrapped a series of agents across our go-to-market operation. We started in marketing, moved into sales, and ended up building utility tools the whole team uses. Some of those agents run daily. Others never made it past the first demo. And honestly, the failures taught me more than the wins.</p>
+
+      <p>What follows isn't a product pitch or a best-practice deck. It's what I actually experienced — chapter by chapter — as a working CMO trying to figure out how to make AI agents useful in the real world, not in a sandbox demo. I've organized it around the things that surprised me most, the decisions I got wrong, and the perspective I'd want if I were starting this from scratch.</p>
+
+      <div class="pullquote">If you're a senior leader thinking about doing the same thing, I made enough of the mistakes for both of us.</div>
+
+      <p>Use the contents menu in the top right at any time. Each chapter stands alone — but they're sequenced for a reason.</p>
+    `
+  },
+  {
+    num: '01',
+    title: 'On Purpose',
+    subtitle: 'Why you\'re building matters more than what you\'re building.',
+    time: '4 min',
+    body: `
+      <p class="lead">I want to start here because I think most organizations skip it entirely — and it costs them.</p>
+
+      <p>Before I get into any specific agent, I want to spend a minute on the question nobody asks before they start: <em>why are we doing this?</em></p>
+
+      <p>Not the business case version of that question. The honest version. Are you building agents because you genuinely believe they'll make your team more effective? Or because someone in a leadership meeting said "we should be doing something with AI" and this is how you're responding?</p>
+
+      <p>I ask because the answer shapes everything — how you scope the work, how you manage expectations, how you handle the inevitable moments when something breaks and you have to decide whether to fix it or move on.</p>
+
+      <p>For us, the starting question wasn't "what can we automate?" It was something closer to "wouldn't it be cool if..." That distinction matters more than it sounds. It kept the early work genuinely exploratory — a cross-section of the team, different roles, different levels of technical comfort, all asked to imagine what was possible and then to find the edges of it. People were critical to this phase. Not just as users but as course-correctors. The agents that survived earliest scrutiny were the ones where someone in the room said "that's wrong" and we could fix it in real time.</p>
+
+      <p>We were also deliberate about what we weren't trying to do. We weren't trying to replace thinking. We were trying to free up more time for it. Every agent we built was designed to take repetitive, low-judgment work off someone's plate — not to remove them from the workflow entirely. The team stays accountable for something I think of as the agent brain: the repository of process knowledge, operating procedures, institutional data, and hard-won judgment that lives behind every role. An agent without that brain is just a prompt. The brain is what makes it useful.</p>
+
+      <p>Here's the honest pattern that emerged: some agents stuck. Others were used once and quietly died. And some stopped working not because the agent was wrong, but because a tool it depended on changed underneath it — an API policy shifted, a data source moved behind a paywall, a connector broke. We'll come back to that.</p>
+
+      <p>The deeper lesson from this phase was about selection criteria. At some point, you have to decide when an experiment is worth resourcing properly — when it moves from the lab into production, with real ownership, maintenance, and accountability. That transition doesn't happen automatically. Most teams never make it explicitly, which means agents live in a permanent half-built state that serves no one.</p>
+
+      <div class="pullquote">idea → experiment → usage → managed agent</div>
+
+      <p>The managed stage is where most organizations underinvest, and where most of the value leaks away.</p>
+    `
+  },
+  {
+    num: '02',
+    title: 'On Intelligence',
+    subtitle: 'The first agents that actually changed how we made decisions.',
+    time: '3 min',
+    body: `
+      <p class="lead">If I were advising someone starting this from scratch, this is where I'd tell them to begin — not with automation, not with content, not with sales tools. With analysis.</p>
+
+      <p>The reason is simple: it's the lowest-risk place to learn. You're not changing a workflow. You're not touching customer-facing output. You're just asking the AI to help you understand data you already have. And if it gets something wrong, you catch it before it matters.</p>
+
+      <p>The first real test wasn't building a tool at all. It was whether AI could function as a genuine strategic analyst. We had a dense quarterly performance report — SDR activity data, channel metrics, lead volumes, pipeline status — and I wanted to see what an AI would do with it if I gave it a real question: where should we focus in Q2 to book more meetings and improve demand generation?</p>
+
+      <p>The output was better than I expected. The analysis identified that 36% of our hot leads were untouched, that 60% of open deals had seen no activity in 30-plus days, and that LinkedIn was delivering a 22.9% reply rate against email's 1.37% — a 16x gap that the team hadn't fully internalized. More importantly, it named the structural bottleneck that the internal team hadn't named: our outbound machine could theoretically run at 10,000-plus messages per quarter, but was running at two-thirds capacity because campaign creation — the briefing, the writing, the sequencing — was bottlenecked through one person. Me.</p>
+
+      <p>That's not a comfortable thing to read about yourself. It's also exactly the kind of insight that changes how you run the next quarter.</p>
+
+      <p><span class="label">What worked:</span> The analysis was rigorous and the framing was sharp. It synthesized the data into a decision frame rather than just summarizing it — which is a meaningful leap above what most BI tools give you.</p>
+
+      <p><span class="label">What didn't:</span> The agent was working from a report, not from live data. A static document is a snapshot. An executive team needs pattern recognition over time. We didn't have the infrastructure to feed live pipeline data into the analysis loop, which meant the value was one-shot rather than ongoing. That gap hasn't been fully closed.</p>
+
+      <p><span class="label">What I wish I'd known:</span> Build the data pipeline before you build the agent. If the agent has to work from uploaded PDFs and exported spreadsheets, you'll spend as much time on file prep as you save in analysis.</p>
+
+      <p><span class="label">Where it stands:</span> The Q1 analysis shaped the Q2 strategy. It hasn't been productized into a recurring intelligence function — though it should be.</p>
+
+      <blockquote><em>⏱ Concept to useful output: ~2 hours. Concept to repeatable process: not yet achieved.</em></blockquote>
+    `
+  },
+  {
+    num: '03',
+    title: 'On Marketing Agents',
+    subtitle: 'What content at scale actually looks like when you try to build it.',
+    time: '4 min',
+    body: `
+      <p class="lead">Marketing felt like the natural place to start. The work is high-volume, a lot of it is repeatable, and the output is visible enough that you can tell pretty quickly whether the agent is helping or making things worse.</p>
+
+      <p>What I found is that AI is genuinely good at raising the floor on content quality. It's not as good at raising the ceiling. And there's a version of "scaling content with AI" that actually produces worse content, faster. The two experiments below show both sides of that.</p>
+
+      <p>I'm going to be honest about the frustrating parts too, because I think the framing that AI agents just work if you prompt them correctly is one of the more damaging myths in this space.</p>
+
+      <h3 class="subagent">The News Aggregator</h3>
+
+      <p>The idea was simple: instead of manually scanning for relevant industry news every day, build an agent that does it automatically. It would run targeted searches, classify articles against our positioning, and surface only the stories worth paying attention to — flagged as either supporting our narrative, showing competitors taking counter-approaches, or highlighting market pain points we could speak to.</p>
+
+      <p>The first version worked but was slow — about 30 seconds to load, which sounds minor until you're refreshing it for the third time before a team standup. We rebuilt it leaner, reducing the number of searches and cutting load time significantly.</p>
+
+      <p>The bigger issue wasn't speed. It was that the agent occasionally hallucinated article summaries when the underlying URL was paywalled and the content wasn't fully accessible. The headline would be real; the summary would be invented. We didn't catch this for a few cycles. When we did, it required building in a flagging mechanism — more complexity we hadn't planned for. And even with that fixed, the output still needed daily human review before it was usable. The agent was surfacing good material; a human still had to curate it.</p>
+
+      <p><span class="label">What I learned:</span> Agents that depend on web search are inherently variable. The quality of what comes back is a function of what's been indexed, what's publicly accessible, and how the model interprets ambiguous content. Build quality-checking into the design from the start — not as a fix after you've already shipped it.</p>
+
+      <p><span class="label">Where it stands:</span> Running in a leaner version. Used selectively — primarily before content planning sessions and events — rather than as a daily feed.</p>
+
+      <blockquote><em>⏱ Concept to first working version: ~3 hours. Stable v2: one additional session.</em></blockquote>
+
+      <h3 class="subagent">The LinkedIn Content Scorer</h3>
+
+      <p>This is one of the agents I'm most satisfied with, and also one that reminded me how quickly small technical issues can crater a workflow.</p>
+
+      <p>The problem: we had no consistent standard for what a good LinkedIn post looked like. "Good" was entirely subjective, which meant quality was a function of whoever reviewed it last. I wanted a scoring tool — something that would evaluate a post against a defined framework, tell you where it was weak, and generate a rewritten version calibrated to actually perform.</p>
+
+      <p>We built a 100-point rubric based on the methods of several top B2B content creators — covering hook strength, clarity of point of view, specificity, scannability, actionability, credibility signals, and engagement design. The model produced the framework; we stress-tested it against real posts and refined the weighting. That part was smooth.</p>
+
+      <p>The application itself — a single HTML file that evaluates a post and generates a rewrite — worked. Then the copy button stopped working. This sounds like a small thing. It was a disproportionately frustrating thing, because it broke the exact moment in the workflow where you'd want to take the rewritten post and actually use it. The fix was a two-line code correction. We spent more time diagnosing it than fixing it.</p>
+
+      <p>The output quality issue was subtler. When the model is optimizing for a rubric, it sometimes produces content that scores well but reads poorly — technically correct, tonally flat. It was trying to be a good LinkedIn post rather than actually being one. We learned to treat the rewrite as a first draft.</p>
+
+      <p><span class="label">What I learned:</span> Rubric-driven content optimization is a useful scaffold, not a replacement for editorial judgment. The agent raises the floor. It doesn't raise the ceiling.</p>
+
+      <p><span class="label">Where it stands:</span> In active use as a quality gate. Posts that score below 70 don't publish without revision.</p>
+
+      <blockquote><em>⏱ Concept to working app: ~4 hours. Bug fix: 20 minutes.</em></blockquote>
+    `
+  },
+  {
+    num: '04',
+    title: 'On Sales Agents',
+    subtitle: 'Where I found the most value — and the most friction.',
+    time: '5 min',
+    body: `
+      <p class="lead">Sales is where the stakes are highest and the tolerance for error is lowest. A bad LinkedIn post is an embarrassment. A bad sales email to the wrong person at the wrong time can close a door for months.</p>
+
+      <p>That tension — between what AI agents can genuinely speed up and what they can easily get wrong — defined everything we built in the sales space. I found more real value here than anywhere else. I also found more frustration. Sometimes in the same tool.</p>
+
+      <p>Here's what we built and what I actually learned from each one.</p>
+
+      <h3 class="subagent">The Prospect Research Tool</h3>
+
+      <p>Our SDRs were spending 20 to 40 minutes per account on research before writing a single word of outreach. I wanted to cut that dramatically — company background, ICP fit score, relevant pain points, target personas, and a personalized first-touch draft, all generated from a company name and URL.</p>
+
+      <p>This was the most iterative build of the whole program. The first version tried to run web search and API calls from inside the same interface. It failed — "Failed to fetch" error, which tells you almost nothing useful about the actual problem. We rebuilt it. Still failed. Eventually diagnosed the issue: the environment we were building in didn't support outbound API calls the way we'd assumed.</p>
+
+      <p>Version four — the one that actually works — changed the architecture. Rather than making API calls inside the tool, it generates a structured research prompt that the user pastes into a separate AI session. Less elegant than we wanted. But it works, and the output quality is high.</p>
+
+      <p>Once the architecture was stable, we loaded in our full ICP definition — six distinct buyer personas with pain points, buying triggers, objections, and preferred CTAs — so the tool could produce genuinely calibrated outreach rather than generic personalization.</p>
+
+      <p>The clearest proof point: we ran it against Belden Inc. after a webinar where a Belden advisor had spoken. The tool returned a full intelligence brief identifying the right target personas, specific pain points around post-acquisition process standardization, and a first-touch email that referenced the webinar speaker directly as a warm entry point. An SDR would have needed 45 minutes to build that manually.</p>
+
+      <p><span class="label">What I learned:</span> Validate the technical architecture before you design the user experience. We built the three-tab interface before we understood what the environment would and wouldn't support. When the architecture changed, the UX had to change with it.</p>
+
+      <blockquote><em>⏱ Concept to first failed version: 1 session. Concept to working v4: 3 sessions across 2 days.</em></blockquote>
+
+      <h3 class="subagent">The Sales Call Analyzer</h3>
+
+      <p>We had no structured post-call review process. Reps debriefed informally, if at all. There was no consistent framework for identifying where objections were mishandled or where discovery was weak.</p>
+
+      <p>This agent takes a call transcript and returns every objection verbatim, grades how the rep handled each one, surfaces every question the rep asked and grades its quality, and produces an overall scorecard with a letter grade and specific improvement notes.</p>
+
+      <p>I'd hand this one to anyone outside our company and say it works. The key design decision that makes it trustworthy: it quotes the prospect and rep directly. No paraphrasing. When it grades a response poorly, you can see exactly what was said and why the grade is fair. The first test on a real transcript caught a moment where a rep deflected a pricing objection without addressing the underlying concern — something the rep themselves hadn't noticed. That's the agent doing something genuinely useful.</p>
+
+      <p>The honest limitations: PDF export from the build environment we used doesn't work — a sandbox constraint we worked around by generating a formatted HTML report file instead. And the tool is only useful if you have a transcript to begin with. We assumed transcription was in place across the team. For some reps, it wasn't.</p>
+
+      <p><span class="label">What I learned:</span> Check your data infrastructure before you build the agent on top of it. An excellent agent with no input is worth nothing.</p>
+
+      <blockquote><em>⏱ Concept to working tool: ~3 hours. PDF export: workaround in place, unresolved.</em></blockquote>
+
+      <h3 class="subagent">The AI SDR Tool</h3>
+
+      <p>The concept: a three-tab interface covering prospect research, cold email generation, and follow-up sequencing — all calibrated to our ICP and voice.</p>
+
+      <p>It works. But it lives in a gray zone. It produces good cold emails. It also produces emails that sound like good cold emails. In enterprise B2B, where your buyers receive hundreds of AI-generated messages every week, they've developed a reliable detector for the pattern. The emails that performed best were the ones that combined the AI's research capability with a human decision about which specific trigger event was worth leading with — a new appointment, an acquisition, a quarterly result. The AI could find the trigger. Only the human could decide whether it was worth using.</p>
+
+      <p>The follow-up sequence generation was the unexpected win. The AI produced well-structured six-email sequences with clear rationale for each step, and these became the foundation of the SDR sequence library that the team uses daily.</p>
+
+      <p><span class="label">What I learned:</span> Cold email quality degrades as soon as it becomes templated at scale. The first ten emails from a new template feel fresh. By the thirtieth, your buyer has pattern-matched it as AI-generated. Build refresh cycles into your workflow from day one.</p>
+
+      <blockquote><em>⏱ Concept to first working version: 2 sessions. Still evolving.</em></blockquote>
+    `
+  },
+  {
+    num: '05',
+    title: 'On Utility Agents',
+    subtitle: 'The tools that surprised me most — for better and worse.',
+    time: '4 min',
+    body: `
+      <p class="lead">Not everything we built fits neatly into marketing or sales. Some of the most instructive agents were the ones solving operational problems that nobody had prioritized because they didn't look glamorous enough to justify the investment.</p>
+
+      <p>Two stand out. One became one of the highest-value outputs of the entire program. The other taught me more about what AI agents get confidently wrong than any of the purpose-built tools did.</p>
+
+      <h3 class="subagent">The AI Readiness Report Tool</h3>
+
+      <p>This one started as a prospect engagement problem. After webinars and events, we needed a personalized touchpoint that wasn't just a brochure. We had a survey application that captured AI readiness data, but it was a blank form — it put all the work on the prospect.</p>
+
+      <p>The idea was to flip it: use AI to pre-fill the prospect's current maturity scores using publicly available information about their company, so that by the time they open the survey, it's already half-answered. The survey becomes a review-and-confirm rather than a data entry exercise. And when the report generates, the prospect is looking at a radar chart of their own organization's AI maturity, benchmarked against their industry peers.</p>
+
+      <p>This was the most technically complex build of the program. The survey application and the AI build environment we were working in don't communicate natively. Understanding the data schema required cloning the GitHub repo and reading through it before writing a single line of new code. When we eventually rebuilt it as a standalone tool, the scope expanded across multiple iterations — company URL input, a "what we know" field, per-pillar rationale and sources, industry benchmark comparisons, gap action plans, and multiple export formats.</p>
+
+      <p>This is also where I got the most frustrated. Rate limit errors were intermittent, hard to reproduce, and generated error messages that pointed nowhere useful. Diagnosing them took longer than building the features they broke. And PDF export failed entirely the first time — the CDN we used was blocked in the build environment. Three debugging sessions to get a button to work.</p>
+
+      <div class="pullquote">When a prospect sees you've already researched their organization before they've filled in a form, the sales conversation starts from a completely different place.</div>
+
+      <p>That's a real commercial advantage.</p>
+
+      <p><span class="label">What I learned:</span> Multi-part tools with external dependencies multiply your failure surface area. Build the simplest version first. Validate it. Then add complexity one dependency at a time.</p>
+
+      <p><span class="label">Where it stands:</span> Live and in active use for prospect engagement and sales discovery. One of the highest-value outputs of the whole program.</p>
+
+      <blockquote><em>⏱ Concept to first version: 3 sessions. Stable production version: ~6 sessions across two weeks.</em></blockquote>
+
+      <h3 class="subagent">The ClickUp Content Library Sync Agent</h3>
+
+      <p>Less glamorous, but instructive. We had a content library spreadsheet out of sync with our ClickUp project board, which was itself partially out of sync with SharePoint where the actual files lived. The agent's job was to read the spreadsheet, find the gaps, search SharePoint for missing links and metadata, and populate the table.</p>
+
+      <p>This agent broke first, got fixed, broke again, and eventually worked — but not before teaching me something important about what "confident" looks like in an AI context. When a file had moved in SharePoint or naming conventions had drifted, the agent would populate a field confidently with the wrong link. Not "I couldn't find this." Just the wrong answer, stated with the same certainty as a correct one.</p>
+
+      <p><strong>Confident wrongness is worse than honest uncertainty.</strong> We added a mandatory verification step — printing updated rows and confirming accuracy before writing anything to the output file. It caught errors every single time.</p>
+
+      <p><span class="label">What I learned:</span> Agents working with unstructured organizational data need explicit validation rules before you trust them to write anything. "Fill in the gaps" is not a specific enough instruction for a production system.</p>
+
+      <p><span class="label">Where it stands:</span> Ran once, verified manually, library now maintained manually with the agent used on-demand for bulk updates.</p>
+
+      <blockquote><em>⏱ Concept to working first pass: 2 sessions. Verification and correction: 1 additional session.</em></blockquote>
+    `
+  },
+  {
+    num: '06',
+    title: 'On Scrapping',
+    subtitle: 'The one we almost built — and why not building it was the right call.',
+    time: '2 min',
+    body: `
+      <p class="lead">Not every agent story ends with something shipping. This one ends with a deliberate decision not to build — and I think it's the most important decision we made across the entire program.</p>
+
+      <p>We talked seriously about building an agent that would not just generate outreach emails but queue them, personalize them per account, and push them directly into the outbound platform. A fully autonomous top-of-funnel operation.</p>
+
+      <p>We didn't build it. And I want to be specific about why, because I think it applies to a lot of the automation conversations happening in GTM organizations right now.</p>
+
+      <p>The decision point came when I asked a simple question: <em>if this agent sends an email we wouldn't have approved, what happens?</em></p>
+
+      <p>The answer: we find out after the prospect has already received it.</p>
+
+      <p>In enterprise B2B, where a single poorly timed email to the wrong person at the wrong company can close a door for months, the consequences of an autonomous outreach error aren't recoverable in any clean way. The agent would have been fast, consistent, and high-volume. It would also have sent emails to people who were mid-negotiation with the sales team, to former clients we had complicated histories with, and to contacts in regions where unsolicited commercial email carries regulatory implications.</p>
+
+      <div class="pullquote">The human-in-the-loop wasn't a limitation we were trying to work around. It was the feature.</div>
+
+      <p><span class="label">The rule I took from this:</span> Before you build any agent, ask what the worst-case failure looks like. If the failure is embarrassing, rebuild it. If the failure is irreversible, don't automate it.</p>
+    `
+  },
+  {
+    num: '07',
+    title: 'On Blackbox Thinking',
+    subtitle: 'The problem nobody warned me about — and the one I think about the most.',
+    time: '4 min',
+    body: `
+      <p class="lead">Of everything in this write-up, this is the section I'd most want someone to read before they start building. Not because it's the most actionable, but because it's the thing that caught me most off guard — and the thing I see least often discussed in the coverage of enterprise AI adoption.</p>
+
+      <p>Every agent we built started the same way: a conversation. Me explaining to an AI tool what I needed done — the job, the decisions it needed to make, the output format. The model would come back with something. That something usually needed significant refinement before it was usable. But it was a start.</p>
+
+      <p>As the builds got more complex, a different problem emerged. The model would forget elements of the original brief. It would hallucinate details to fill in gaps — confidently, plausibly, incorrectly. So we did what made sense: we built structure. Reference documents. Written instructions. Saved prompts. External data pulled in as context. The structure helped — hallucinations dropped, output quality improved, time per task went down.</p>
+
+      <p>But it didn't solve the blackbox problem.</p>
+
+      <p>When something breaks — and things break — I still can't look inside the agent to see what failed. Which step in the chain went wrong. Where the reasoning derailed. We're dependent on the tool providers for that visibility, and most of the time, they don't give it to you. When one provider changed its API access policy mid-project, an agent we'd built a workflow around stopped working overnight. We had two choices: invest the time to rebuild around the new constraints, or abandon it. In two cases, we abandoned. In one, we rebuilt. The rebuild took longer than the original build.</p>
+
+      <p>This is one of the most underappreciated risks in enterprise agent adoption. You can build something that works, integrate it into a daily workflow, create genuine team dependency on it — and then watch it break because a third party changed something you had no visibility into and no control over.</p>
+
+      <p>How we're thinking about this going forward: we're building a dependency threshold into our evaluation loop. If an agent reaches a point where a failure would materially disrupt operations, we treat it as a project to reconstruct that agent in an environment we actually own and control — understanding the underlying logic well enough to rebuild it ourselves, outside the blackbox.</p>
+
+      <div class="pullquote">Dependency and visibility must scale together. The more your team relies on an agent, the more you need to understand what's running inside it.</div>
+    `
+  },
+  {
+    num: '08',
+    title: 'On Skills',
+    subtitle: 'The hardest part isn\'t the technology — it\'s the imagination.',
+    time: '3 min',
+    body: `
+      <p class="lead">I want to be direct about something before I get into this: everything I've described so far assumes that your team knows what they want an agent to do. In my experience, that assumption breaks more agent programs than any technical problem does.</p>
+
+      <p>Getting the team to map their current workflows was easy. Ask someone to describe what they do step by step and they can do it. Ask them to reimagine that same workflow with AI genuinely embedded — to think past the current sequence of tasks toward a fundamentally different operating model — and most people hit a wall.</p>
+
+      <p>This is the hardest part of building AI agents in a real organization. It's almost never discussed in the coverage of what the technology can do. <strong>The technology is not the constraint. The imagination is.</strong></p>
+
+      <p>The team tended to fall into one of two traps. The first was incremental thinking: taking the existing workflow and asking where AI could help with one specific step. The second was paralysis: recognizing that everything could theoretically change and not knowing where to start. Neither produced the useful middle ground — a redesigned workflow where AI owns the low-judgment repetitive work and the human focuses on the parts that require real contextual reasoning, relationship awareness, or judgment.</p>
+
+      <p>What actually helped: sitting with someone inside their workflow and asking <em>"what about this part takes the most time for the least return?"</em> That question is answerable. It leads somewhere. It produces a real brief for an agent rather than a general idea about automation.</p>
+
+      <p>We're now building this more formally into how we design new agents. New builds don't start with a prompt — they start with a workflow map. Where is time being spent? Where is judgment required versus where is judgment just being applied to something routine? The agent is designed to own the routine parts, with explicit handoff points back to the human.</p>
+
+      <p>The bigger shift we're still working on is helping the team see beyond their current role to what that role could look like if the routine parts were handled. That's a harder conversation — it requires people to let go of familiar tasks and trust that the freed-up time gets used on something that matters more. We don't have a clean answer for it yet. But it's built into how we onboard every new agent rather than treated as a separate change management exercise.</p>
+    `
+  },
+  {
+    num: '09',
+    title: 'On Tokens',
+    subtitle: 'The cost of experimentation is real — and easy to ignore until it isn\'t.',
+    time: '3 min',
+    body: `
+      <p class="lead">Nobody talks about this in the early stages of an AI agent program. Everyone's focused on what the technology can do. Token costs feel like an implementation detail. They're not. They're a real budget line that scales with usage, and by the time you notice it, it's usually already a problem.</p>
+
+      <p>We burned a lot of tokens over the first month. Not recklessly — but more than we expected, and not always in ways that produced anything useful.</p>
+
+      <p>The majority of consumption came from three sources. First, the experimentation phase itself: long context windows, multiple iterations, a lot of back-and-forth refining outputs that weren't quite right yet. Second, the deployed agents — particularly the ones making multiple sequential API calls. The News Aggregator was the most expensive of these, running six searches plus a classification pass on every single refresh. Third, debugging: running the same broken agent repeatedly trying to diagnose what was wrong.</p>
+
+      <p>That last category was the most frustrating. You pay the same for a failed call as a successful one. When we hit rate limit errors on the Readiness Report tool, the retry loops were burning tokens on calls that were going to fail before they ever reached the model. We fixed it by adding retry logic with exponential backoff. But we fixed it after the cost had already accumulated.</p>
+
+      <p>How we're improving going forward comes down to three disciplines.</p>
+
+      <p><span class="label">Minimum viable context.</span> Before building anything new, we define what the model actually needs to do the job — and cut everything we're including out of habit or anxiety. Over-contextualizing is expensive and often reduces quality because the model spends effort figuring out what's relevant.</p>
+
+      <p><span class="label">Caching.</span> Structured reference documents get included as persistent context rather than re-injected on every call.</p>
+
+      <p><span class="label">Output scoping.</span> We now specify the length and format of what we want upfront. Left to its own devices, the model will often produce more than you need.</p>
+
+      <div class="pullquote">Token costs scale with usage and aren't always visible until they show up as a surprise on a monthly bill.</div>
+
+      <p>Build cost awareness into the program from day one. Set usage baselines per agent. Review them monthly. The most valuable agents will justify the cost easily. The marginal ones won't.</p>
+    `
+  },
+  {
+    num: '10',
+    title: 'On Tools',
+    subtitle: 'How we went from one platform to a sprawl problem — and what we\'re doing about it.',
+    time: '3 min',
+    body: `
+      <p class="lead">Here's a pattern I didn't anticipate: the faster you build agents, the faster your tool stack grows. And at some point — usually around month two — you look up and realize you've got licenses across a dozen platforms, team members context-switching between four or five interfaces daily, and no one person who fully understands what's connected to what.</p>
+
+      <p>That's where we ended up. And fixing it cost more time than it would have taken to do it right from the start.</p>
+
+      <p>At the beginning of this program, we were effectively running on a single AI platform. By the end of the first month, we had licenses with multiple major LLMs, document and data storage platforms, process and workflow tools, UI/UX builders, and a growing list of connectors, integrations, and subscriptions that nobody had explicitly approved. They'd simply accumulated, one proof-of-concept at a time.</p>
+
+      <p>The technology pressure this creates on a team is real and compounding. Every new tool requires onboarding. Every new tool has a learning curve. Every new tool has a slightly different interface, a slightly different mental model, and a slightly different set of things it won't do that you only discover after you've committed to it. That constant churn generates management overhead that doesn't show up anywhere in your project plan.</p>
+
+      <p>Beyond the overhead, two structural risks crept up on us. The first was cost sprawl. Individual tool licenses look small in isolation. Across a twelve-person GTM team, with multiple seats per tool and overlapping capabilities across platforms, the number becomes significant — and because no single person owns the full picture, no single person feels accountable for rationalizing it.</p>
+
+      <p>The second was security and IP exposure. Every tool you connect to your operation is a potential vulnerability. Every API key is a credential to manage. Every document you upload to an external platform is data that now lives somewhere outside your control. We didn't think carefully enough about this at the start. We're thinking about it now.</p>
+
+      <p>How we're addressing this: we moved to a consolidation model. Rather than evaluating each new tool on its individual merits, we evaluate it against a shortlist of platforms we've committed to going deep on. If a capability can be built within one of those platforms — even if a specialist tool would do it marginally better — we build it there. The discipline of a smaller tool stack pays back in reduced training burden, simpler security management, cleaner cost visibility, and fewer integration points that can break.</p>
+
+      <p><span class="label">The practical take for any exec:</span> Define your platform bets early, and make the criteria explicit. Speed of build is not a sufficient reason to add a new tool to the stack. Longevity, security, vendor stability, and team familiarity matter a lot more at month six than they do on day one.</p>
+    `
+  },
+  {
+    num: '11',
+    title: 'On Starting From Zero',
+    subtitle: 'If I were doing this again, here\'s what I\'d change.',
+    time: '3 min',
+    body: `
+      <p class="lead">I want to close with something practical. Not a framework or a methodology — just the things I'd do differently if I were starting this program from day one, knowing what I know now.</p>
+
+      <p>These aren't best practices from a consulting deck. They're the things I got wrong first.</p>
+
+      <h3>Start with analysis, not automation.</h3>
+      <p>The highest-value early use of AI in a GTM function is intelligence — synthesizing data you already have, surfacing patterns the team hasn't seen, turning a quarterly report into a decision frame. This doesn't require complex tooling. It requires good prompts and good data. Do this first before you build anything else.</p>
+
+      <h3>Define the human's role before you define the agent's role.</h3>
+      <p>Every agent that works has a clear point where a human reviews, validates, or approves before the output becomes an action. Every agent that frustrated me was one where we'd underspecified that handoff. Design the human role first. Build the agent around it.</p>
+
+      <h3>Prove the architecture before you design the interface.</h3>
+      <p>We built interfaces before we understood what the underlying environment would support. When the architecture had to change, the UX changed with it — double the rework. Validate the technical approach in the simplest possible form before you design anything people will have to interact with.</p>
+
+      <h3>The first version will be structurally wrong.</h3>
+      <p>Not slightly off — fundamentally wrong. Expect three to four real iterations before an agent is genuinely useful. A two-hour build is a two-hour first draft. Budget accordingly.</p>
+
+      <h3>Adoption is a separate problem from capability.</h3>
+      <p>The Sales Call Analyzer is excellent. Usage is inconsistent. The LinkedIn Content Scorer is solid. It gets skipped when the team is busy. The gap between "we have a tool" and "the team uses the tool" is not a technical problem — it's a change management problem. If you're a senior leader, this is the part that needs your attention. Not the build.</p>
+
+      <h3>Agents don't replace judgment — they scale it.</h3>
+      <p>The most consistent thing I observed across everything we built: agents are good at doing more of what a skilled human would do. They are not good at replacing the judgment that decides what to do. If the judgment isn't there to start with, the agent amplifies the gap, not the capability.</p>
+    `
+  },
+  {
+    num: '12',
+    title: 'Where We Are Now',
+    subtitle: 'The honest take, after three months.',
+    time: '2 min',
+    body: `
+      <p class="lead">About eight agents are running across marketing, sales, and operations. Four are in regular daily use. Two are used on-demand. Two were built, validated, and essentially set aside — the workflows they were designed to support evolved faster than the agents could become habitual.</p>
+
+      <p>The ones working hardest share three things: a clearly defined problem, an explicit human review step, and a realistic expectation of what the AI could and couldn't do reliably. The ones that underperformed either tried to be too autonomous, were built on top of data infrastructure that didn't exist yet, or were solving problems the team didn't feel urgently enough to actually change their behavior for.</p>
+
+      <p>I want to be careful not to make this sound like a success story with some complications. It's closer to the reverse: a genuinely difficult learning experience with some real wins embedded in it. The wins are real. But the path to them is messier, slower, and more human-dependent than almost anything I've read about AI agents would suggest.</p>
+
+      <div class="pullquote">The organizations that are going to do this well aren't the ones moving fastest. They're the ones staying closest to the problem.</div>
+
+      <p>Keep the human in the loop. Treat every broken output as a design note rather than a reason to quit.</p>
+
+      <p>Start small. Build for something specific. And when the agent gets it wrong — which it will, often — treat that as the work, not an interruption to it. Because the only agents that actually deliver value are the ones you stayed with long enough to get right.</p>
+
+      <p style="margin-top: 64px; padding-top: 32px; border-top: 0.5px solid var(--hair); font-style: italic; color: var(--ink-soft); font-size: 16px;">These are my personal observations from three months of building AI agents as CMO of a go-to-market operation. The tools, agents, and experiences described are real. The opinions are entirely my own.</p>
+
+      <p style="text-align: center; margin-top: 80px;">
+        <span style="font-family: var(--display); font-size: 32px; color: var(--accent); font-style: italic;">§</span>
+      </p>
+    `
+  }
+];
+
+// ===================== STATE =====================
+let currentChapter = -1; // -1 = cover
+const STORAGE_KEY = 'gtm_agents_essay_progress';
+
+// ===================== INIT =====================
+function init() {
+  buildCoverTOC();
+  buildDrawerTOC();
+  buildChapters();
+  checkResume();
+  updateUI();
+
+  document.addEventListener('keydown', handleKeys);
+  window.addEventListener('scroll', updateProgress);
+}
+
+function buildCoverTOC() {
+  const list = document.getElementById('coverTocList');
+  chapters.forEach((ch, i) => {
+    if (i === 0) return; // skip Opening
+    const item = document.createElement('li');
+    item.className = 'cover-toc-item';
+    item.onclick = () => goToChapter(i);
+    item.innerHTML = `
+      <span class="cover-toc-num">${ch.num}</span>
+      <span class="cover-toc-title">${ch.title}</span>
+      <span class="cover-toc-time">${ch.time}</span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function buildDrawerTOC() {
+  const list = document.getElementById('tocDrawerList');
+  chapters.forEach((ch, i) => {
+    const item = document.createElement('li');
+    item.className = 'toc-drawer-item';
+    item.dataset.idx = i;
+    item.onclick = () => { goToChapter(i); closeTOC(); };
+    item.innerHTML = `
+      <span class="toc-drawer-num">${ch.num}</span>
+      <div>
+        <div class="toc-drawer-title">${ch.title}</div>
+        <div class="toc-drawer-subtitle">${ch.subtitle}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function buildChapters() {
+  const container = document.getElementById('chapterContainer');
+  chapters.forEach((ch, i) => {
+    const article = document.createElement('article');
+    article.className = 'chapter';
+    article.id = 'chapter-' + i;
+
+    const prevIdx = i - 1;
+    const nextIdx = i + 1;
+    const hasPrev = i > 0;
+    const hasNext = i < chapters.length - 1;
+
+    article.innerHTML = `
+      <header class="chapter-header">
+        <div class="chapter-meta">
+          <span class="chapter-meta-num">CH. ${ch.num}</span>
+          <span class="chapter-meta-line"></span>
+          <span class="chapter-meta-time">${ch.time} read</span>
+        </div>
+        <h1 class="chapter-title">${ch.title}</h1>
+        <p class="chapter-subtitle">${ch.subtitle}</p>
+      </header>
+      <div class="chapter-body">${ch.body}</div>
+      <nav class="chapter-nav">
+        <div class="chapter-nav-link ${hasPrev ? '' : 'disabled'}" onclick="${hasPrev ? `goToChapter(${prevIdx})` : ''}">
+          <div class="chapter-nav-direction">← Previous</div>
+          <div class="chapter-nav-title">${hasPrev ? chapters[prevIdx].title : 'Cover'}</div>
+        </div>
+        <div class="chapter-nav-link next ${hasNext ? '' : 'disabled'}" onclick="${hasNext ? `goToChapter(${nextIdx})` : 'goCover()'}">
+          <div class="chapter-nav-direction">${hasNext ? 'Next →' : 'Return to cover →'}</div>
+          <div class="chapter-nav-title">${hasNext ? chapters[nextIdx].title : 'The end'}</div>
+        </div>
+      </nav>
+    `;
+    container.appendChild(article);
+  });
+}
+
+function checkResume() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved !== null) {
+      const idx = parseInt(saved, 10);
+      if (!isNaN(idx) && idx > 0 && idx < chapters.length) {
+        const note = document.getElementById('resumeNote');
+        note.style.display = 'block';
+        note.innerHTML = `You stopped reading at <a onclick="goToChapter(${idx})">Chapter ${chapters[idx].num} — ${chapters[idx].title}</a>`;
+      }
+    }
+  } catch (e) {}
+}
+
+// ===================== NAV =====================
+function startReading() {
+  goToChapter(0);
+}
+
+function goToChapter(idx) {
+  if (idx < 0 || idx >= chapters.length) return;
+  currentChapter = idx;
+  document.getElementById('cover').style.display = 'none';
+  document.querySelectorAll('.chapter').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('chapter-' + idx);
+  target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  saveProgress(idx);
+  updateUI();
+}
+
+function goCover() {
+  currentChapter = -1;
+  document.querySelectorAll('.chapter').forEach(el => el.classList.remove('active'));
+  document.getElementById('cover').style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  updateUI();
+}
+
+function saveProgress(idx) {
+  try {
+    localStorage.setItem(STORAGE_KEY, idx.toString());
+  } catch (e) {}
+}
+
+function updateUI() {
+  // Top bar chapter indicator
+  const tbc = document.getElementById('topbarChapter');
+  if (currentChapter === -1) {
+    tbc.innerHTML = '';
+  } else {
+    tbc.innerHTML = `<span class="num">${chapters[currentChapter].num}</span> / ${String(chapters.length - 1).padStart(2, '0')}`;
+  }
+
+  // Drawer active state
+  document.querySelectorAll('.toc-drawer-item').forEach(item => {
+    item.classList.toggle('active', parseInt(item.dataset.idx) === currentChapter);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  if (currentChapter === -1) {
+    document.getElementById('progress').style.width = '0%';
+    return;
+  }
+  const docEl = document.documentElement;
+  const scrollTop = window.scrollY || docEl.scrollTop;
+  const scrollHeight = docEl.scrollHeight - docEl.clientHeight;
+  const chapterProgress = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0;
+  const totalProgress = ((currentChapter + chapterProgress) / chapters.length) * 100;
+  document.getElementById('progress').style.width = Math.min(100, totalProgress) + '%';
+}
+
+// ===================== TOC DRAWER =====================
+function openTOC() {
+  document.getElementById('tocOverlay').classList.add('open');
+  document.getElementById('tocDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTOC() {
+  document.getElementById('tocOverlay').classList.remove('open');
+  document.getElementById('tocDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ===================== PDF EXPORT =====================
+function downloadPDF() {
+  // Close the drawer if open so print preview is clean
+  closeTOC();
+  // Print CSS handles showing all chapters and hiding chrome.
+  // Tiny delay lets the drawer close transition finish before print dialog opens.
+  setTimeout(() => { window.print(); }, 250);
+}
+
+// ===================== KEYS =====================
+function handleKeys(e) {
+  if (e.key === 'Escape') {
+    closeTOC();
+  } else if (e.key === 'ArrowRight' && currentChapter >= 0 && currentChapter < chapters.length - 1) {
+    goToChapter(currentChapter + 1);
+  } else if (e.key === 'ArrowLeft') {
+    if (currentChapter > 0) goToChapter(currentChapter - 1);
+    else if (currentChapter === 0) goCover();
+  } else if (e.key === 't' || e.key === 'T') {
+    if (document.getElementById('tocDrawer').classList.contains('open')) closeTOC();
+    else openTOC();
+  } else if ((e.key === 'p' || e.key === 'P') && (e.metaKey || e.ctrlKey)) {
+    // Let Cmd/Ctrl+P work naturally — don't preventDefault, the print CSS will handle layout
+  }
+}
+
+// Boot
+init();
+</script>
+
+</body>
+</html>
